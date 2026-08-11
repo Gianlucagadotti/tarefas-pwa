@@ -52,6 +52,10 @@ import TaskItem from '../components/TaskItem.vue'
 import InstallButton from '../components/InstallButton.vue'
 import { useTasksStore } from '../stores/tasks.js'
 
+function handleAdd(payload) {
+  store.addTask(payload);
+}
+
 const store = useTasksStore()
 const editingTask = ref(null)
 
@@ -59,9 +63,6 @@ onMounted(() => {
   store.fetchTasks()
 })
 
-function handleAdd(title) {
-  store.addTask(title)
-}
 
 function handleUpdate(id, title, imgAttachmentKey) {
   store.updateTask(id, { title, imgAttachmentKey })

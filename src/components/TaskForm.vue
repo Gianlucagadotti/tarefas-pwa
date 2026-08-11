@@ -20,36 +20,38 @@
       </button>
     </div>
 
-    <div v-if="editingTask" class="image-section">
-      <img
-        v-if="previewUrl || editingTask.img_url"
-        :src="previewUrl || editingTask.img_url"
-        class="image-preview"
-        alt="Imagem da tarefa"
-      />
-      <label class="image-label" :class="{ disabled: uploading }">
-        <span v-if="uploading" class="upload-status">Enviando...</span>
-        <span v-else>
-          {{ previewUrl || editingTask.img_url
-            ? 'Trocar imagem'
-            : 'Adicionar imagem'
-          }}
-        </span>
-        <input
-          type="file"
-          accept="image/jpeg,image/png"
-          class="image-input"
-          :disabled="uploading"
-          @change="handleImageChange"
-        />
-      </label>
-    </div>
+    <div class="image-section">
+  <img
+    v-if="previewUrl || editingTask?.img_url"
+    :src="previewUrl || editingTask?.img_url"
+    class="image-preview"
+    alt="Imagem da tarefa"
+  />
+  <label class="image-label" :class="{ disabled: uploading }">
+    <span v-if="uploading" class="upload-status">Enviando...</span>
+    <span v-else>
+      {{ previewUrl || editingTask?.img_url
+        ? 'Trocar imagem'
+        : 'Adicionar imagem'
+      }}
+    </span>
+    <input
+      type="file"
+      accept="image/jpeg,image/png"
+      capture="environment"
+      class="image-input"
+      :disabled="uploading"
+      @change="handleImageChange"
+    />
+  </label>
+</div>
   </form>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import tasksApi from '../api/tasksApi.js'
+
 
 const props = defineProps({
   editingTask: {
@@ -68,6 +70,7 @@ watch(
   () => props.editingTask,
   (task) => {
     newTask.value = task ? task.title : ''
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
     previewUrl.value = null
     imgAttachmentKey.value = null
   },
@@ -76,6 +79,7 @@ watch(
 async function handleImageChange(event) {
   const file = event.target.files[0]
   if (!file) return
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = URL.createObjectURL(file)
   uploading.value = true
   try {
@@ -106,9 +110,22 @@ function handleSubmit() {
   previewUrl.value = null
   imgAttachmentKey.value = null
 }
+  const payload = {
+    title: newTask.value.trim(),
+    imgAttachmentKey: imgAttachmentKey.value,
+  };
+
+  if (props.editingTask) {
+    emit('update', props.editingTask.id, payload);
+  } else {
+    emit('add', payload);
+  }
+
+
 
 function handleCancel() {
   newTask.value = ''
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null
   imgAttachmentKey.value = null
   emit('cancel')
@@ -223,5 +240,11 @@ function handleCancel() {
 
 .upload-status {
   color: #888;
+}
+.image-help {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0;
+  flex-basis: 100%;
 }
 </style>
