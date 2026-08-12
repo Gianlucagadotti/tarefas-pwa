@@ -21,20 +21,18 @@
     </div>
 
     <div class="image-section">
+  <!-- Preview da imagem já salva ou capturada -->
   <img
     v-if="previewUrl || editingTask?.img_url"
     :src="previewUrl || editingTask?.img_url"
     class="image-preview"
     alt="Imagem da tarefa"
   />
+
+  <!-- Input com capture (padrão) -->
   <label class="image-label" :class="{ disabled: uploading }">
     <span v-if="uploading" class="upload-status">Enviando...</span>
-    <span v-else>
-      {{ previewUrl || editingTask?.img_url
-        ? 'Trocar imagem'
-        : 'Adicionar imagem'
-      }}
-    </span>
+    <span v-else>Adicionar imagem</span>
     <input
       type="file"
       accept="image/jpeg,image/png"
@@ -44,6 +42,20 @@
       @change="handleImageChange"
     />
   </label>
+
+  <!-- Alternativa com preview ao vivo -->
+  <button
+    type="button"
+    class="task-button-secondary"
+    @click="showCameraCapture = !showCameraCapture"
+  >
+    {{ showCameraCapture ? 'Fechar câmera' : 'Abrir preview ao vivo' }}
+  </button>
+
+  <CameraCapture
+    v-if="showCameraCapture"
+    @captured="handleCameraCapture"
+  />
 </div>
   </form>
 </template>
@@ -65,7 +77,26 @@ const newTask = ref('')
 const previewUrl = ref(null)
 const imgAttachmentKey = ref(null)
 const uploading = ref(false)
+import CameraCapture from './CameraCapture.vue'
 
+const showCameraCapture = ref(false)
+
+function handleCameraCapture(file) {
+  previewUrl.value = URL.createObjectURL(file);
+  uploading.value = true;
+  tasksApi
+    .uploadImage(file)
+    .then((response) => {
+      imgAttachmentKey.value = response.data.attachment_key;
+    })
+    .catch((err) => {
+      console.error(err);
+      previewUrl.value = null;
+    })
+    .finally(() => {
+      uploading.value = false;
+    });
+}
 watch(
   () => props.editingTask,
   (task) => {
@@ -95,21 +126,8 @@ async function handleImageChange(event) {
 }
 
 function handleSubmit() {
-  if (!newTask.value.trim()) return
-  if (props.editingTask) {
-    emit(
-      'update',
-      props.editingTask.id,
-      newTask.value.trim(),
-      imgAttachmentKey.value
-    )
-  } else {
-    emit( 'add', newTask.value.trim() )
-  }
-  newTask.value = ''
-  previewUrl.value = null
-  imgAttachmentKey.value = null
-}
+  if (!newTask.value.trim()) return;
+
   const payload = {
     title: newTask.value.trim(),
     imgAttachmentKey: imgAttachmentKey.value,
@@ -120,6 +138,12 @@ function handleSubmit() {
   } else {
     emit('add', payload);
   }
+
+  newTask.value = '';
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = null;
+  imgAttachmentKey.value = null;
+}
 
 
 
