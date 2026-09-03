@@ -57,6 +57,9 @@ onMounted(() => {
 
 watch(() => props.location, renderLocation, { deep: true })
 onBeforeUnmount(() => map?.remove())
+
+
+
 </script>
 
 <style scoped>

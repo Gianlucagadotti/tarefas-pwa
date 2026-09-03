@@ -19,6 +19,7 @@
         Cancelar
       </button>
     </div>
+    
 
     <div class="image-section">
   <!-- Preview da imagem já salva ou capturada -->

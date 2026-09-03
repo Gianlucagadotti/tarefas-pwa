@@ -8,6 +8,8 @@ export function useGeolocation() {
   const locationError = ref('')
   const location = ref(null)
 
+  
+
   async function readPermissionState() {
     if (!navigator.permissions?.query) return
     try {
