@@ -19,7 +19,21 @@
         Cancelar
       </button>
     </div>
-    
+
+    <div class="location-section">
+      <button
+        type="button"
+        class="task-button-secondary"
+        :disabled="loadingLocation || uploading"
+        @click="handleLocationRequest"
+      >
+        {{ loadingLocation ? 'Obtendo localização...' : location ? 'Atualizar localização' : 'Adicionar localização' }}
+      </button>
+      <span v-if="location" class="location-status">
+        {{ location.label || 'Localização selecionada' }}
+      </span>
+      <span v-if="locationError" class="location-error">{{ locationError }}</span>
+    </div>
 
     <div class="image-section">
   <!-- Preview da imagem já salva ou capturada -->
@@ -64,6 +78,9 @@
 <script setup>
 import { ref, watch } from 'vue'
 import tasksApi from '../api/tasksApi.js'
+import geocodingApi from '../api/geocodingApi.js'
+import { useGeolocation } from '../composables/useGeolocation.js'
+import { buildLocationPayload } from '../utils/location.js'
 
 
 const props = defineProps({
@@ -79,8 +96,33 @@ const previewUrl = ref(null)
 const imgAttachmentKey = ref(null)
 const uploading = ref(false)
 import CameraCapture from './CameraCapture.vue'
+const {
+  location,
+  loadingLocation,
+  locationError,
+  requestCurrentLocation,
+  setLocationFromTask,
+  setLocationLabel,
+  clearLocation,
+} = useGeolocation()
 
 const showCameraCapture = ref(false)
+
+async function handleLocationRequest() {
+  const captured = await requestCurrentLocation()
+  if (!captured) return
+
+  try {
+    const address = await geocodingApi.reverse(
+      captured.latitude,
+      captured.longitude,
+    )
+    setLocationLabel(address?.label)
+  } catch {
+    locationError.value =
+      'Localização obtida, mas não foi possível identificar a rua.'
+  }
+}
 
 function handleCameraCapture(file) {
   previewUrl.value = URL.createObjectURL(file);
@@ -102,6 +144,8 @@ watch(
   () => props.editingTask,
   (task) => {
     newTask.value = task ? task.title : ''
+    if (task) setLocationFromTask(task)
+    else clearLocation()
     if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
     previewUrl.value = null
     imgAttachmentKey.value = null
@@ -132,6 +176,7 @@ function handleSubmit() {
   const payload = {
     title: newTask.value.trim(),
     imgAttachmentKey: imgAttachmentKey.value,
+    ...buildLocationPayload(location.value),
   };
 
   if (props.editingTask) {
@@ -144,6 +189,7 @@ function handleSubmit() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
   imgAttachmentKey.value = null;
+  clearLocation()
 }
 
 
@@ -153,6 +199,7 @@ function handleCancel() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null
   imgAttachmentKey.value = null
+  clearLocation()
   emit('cancel')
 }
 </script>
@@ -200,6 +247,40 @@ function handleCancel() {
 .task-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.task-button-secondary {
+  padding: 8px 14px;
+  background: white;
+  color: #4a90d9;
+  border: 1.5px solid #4a90d9;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.task-button-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.location-section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.location-status {
+  color: #287a45;
+  font-size: 0.875rem;
+}
+
+.location-error {
+  flex-basis: 100%;
+  color: #c0392b;
+  font-size: 0.8rem;
 }
 
 .task-button-cancel {

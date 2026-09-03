@@ -9,6 +9,11 @@ const tasksApi = {
     return apiClient.post('/tasks', {
       title: payload.title,
       img_attachment_key: payload.imgAttachmentKey ?? null,
+      latitude: payload.latitude ?? null,
+      longitude: payload.longitude ?? null,
+      geolocation_accuracy: payload.geolocation_accuracy ?? null,
+      geolocation_timestamp: payload.geolocation_timestamp ?? null,
+      location_label: payload.location_label ?? null,
     });
   },
 
