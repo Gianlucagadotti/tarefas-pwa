@@ -10,10 +10,14 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 
-L.Icon.Default.mergeOptions({
+const taskMarkerIcon = L.icon({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 })
 
 const props = defineProps({
@@ -32,7 +36,7 @@ function renderLocation() {
 
   marker?.remove()
   accuracyCircle?.remove()
-  marker = L.marker(point).addTo(map)
+  marker = L.marker(point, { icon: taskMarkerIcon }).addTo(map)
   if (props.location.label) marker.bindPopup(props.location.label).openPopup()
 
   if (props.location.accuracy > 0) {
