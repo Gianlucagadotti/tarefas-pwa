@@ -21,6 +21,7 @@
           @toggle="handleToggle"
           @remove="handleRemove"
           @edit="handleEdit"
+          @remove-location="handleRemoveLocation"
         />
       </section>
 
@@ -33,6 +34,7 @@
           @toggle="handleToggle"
           @remove="handleRemove"
           @edit="handleEdit"
+          @remove-location="handleRemoveLocation"
         />
       </section>
 
@@ -46,44 +48,53 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import TaskForm from '../components/TaskForm.vue'
-import TaskItem from '../components/TaskItem.vue'
-import InstallButton from '../components/InstallButton.vue'
-import { useTasksStore } from '../stores/tasks.js'
+import { onMounted, ref } from "vue";
+import TaskForm from "../components/TaskForm.vue";
+import TaskItem from "../components/TaskItem.vue";
+import InstallButton from "../components/InstallButton.vue";
+import { useTasksStore } from "../stores/tasks.js";
 
 function handleAdd(payload) {
   store.addTask(payload);
 }
 
-const store = useTasksStore()
-const editingTask = ref(null)
+const store = useTasksStore();
+const editingTask = ref(null);
 
 onMounted(() => {
-  store.fetchTasks()
-})
-
+  store.fetchTasks();
+});
 
 function handleUpdate(id, payload) {
-  store.updateTask(id, payload)
-  editingTask.value = null
+  store.updateTask(id, payload);
+  editingTask.value = null;
 }
 
 function handleCancel() {
-  editingTask.value = null
+  editingTask.value = null;
 }
 
 function handleEdit(task) {
-  editingTask.value = task
+  editingTask.value = task;
 }
 
 function handleToggle(id) {
-  store.toggleTask(id)
+  store.toggleTask(id);
 }
 
 function handleRemove(id) {
-  if (editingTask.value?.id === id) editingTask.value = null
-  store.removeTask(id)
+  if (editingTask.value?.id === id) editingTask.value = null;
+  store.removeTask(id);
+}
+
+function handleRemoveLocation(id) {
+  store.updateTask(id, {
+    latitude: null,
+    longitude: null,
+    geolocation_accuracy: null,
+    geolocation_timestamp: null,
+    location_label: null,
+  });
 }
 </script>
 

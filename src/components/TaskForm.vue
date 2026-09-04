@@ -1,21 +1,11 @@
 <template>
   <form class="task-form" @submit.prevent="handleSubmit">
     <div class="task-row">
-      <input
-        v-model="newTask"
-        type="text"
-        placeholder="Nova tarefa..."
-        class="task-input"
-      />
+      <input v-model="newTask" type="text" placeholder="Nova tarefa..." class="task-input" />
       <button type="submit" class="task-button" :disabled="uploading">
-        {{ editingTask ? 'Alterar' : 'Adicionar' }}
+        {{ editingTask ? "Alterar" : "Adicionar" }}
       </button>
-      <button
-        v-if="editingTask"
-        type="button"
-        class="task-button-cancel"
-        @click="handleCancel"
-      >
+      <button v-if="editingTask" type="button" class="task-button-cancel" @click="handleCancel">
         Cancelar
       </button>
     </div>
@@ -27,75 +17,85 @@
         :disabled="loadingLocation || uploading"
         @click="handleLocationRequest"
       >
-        {{ loadingLocation ? 'Obtendo localização...' : location ? 'Atualizar localização' : 'Adicionar localização' }}
+        {{
+          loadingLocation
+            ? "Obtendo localização..."
+            : location
+              ? "Atualizar localização"
+              : "Adicionar localização"
+        }}
+      </button>
+      <button
+        v-if="editingTask && location"
+        type="button"
+        class="task-button-secondary task-button-remove-location"
+        @click="handleRemoveLocation"
+      >
+        Remover localização
       </button>
       <span v-if="location" class="location-status">
-        {{ location.label || 'Localização selecionada' }}
+        {{ location.label || "Localização selecionada" }}
       </span>
       <span v-if="locationError" class="location-error">{{ locationError }}</span>
     </div>
 
     <div class="image-section">
-  <!-- Preview da imagem já salva ou capturada -->
-  <img
-    v-if="previewUrl || editingTask?.img_url"
-    :src="previewUrl || editingTask?.img_url"
-    class="image-preview"
-    alt="Imagem da tarefa"
-  />
+      <!-- Preview da imagem já salva ou capturada -->
+      <img
+        v-if="previewUrl || editingTask?.img_url"
+        :src="previewUrl || editingTask?.img_url"
+        class="image-preview"
+        alt="Imagem da tarefa"
+      />
 
-  <!-- Input com capture (padrão) -->
-  <label class="image-label" :class="{ disabled: uploading }">
-    <span v-if="uploading" class="upload-status">Enviando...</span>
-    <span v-else>Adicionar imagem</span>
-    <input
-      type="file"
-      accept="image/jpeg,image/png"
-      capture="environment"
-      class="image-input"
-      :disabled="uploading"
-      @change="handleImageChange"
-    />
-  </label>
+      <!-- Input com capture (padrão) -->
+      <label class="image-label" :class="{ disabled: uploading }">
+        <span v-if="uploading" class="upload-status">Enviando...</span>
+        <span v-else>Adicionar imagem</span>
+        <input
+          type="file"
+          accept="image/jpeg,image/png"
+          capture="environment"
+          class="image-input"
+          :disabled="uploading"
+          @change="handleImageChange"
+        />
+      </label>
 
-  <!-- Alternativa com preview ao vivo -->
-  <button
-    type="button"
-    class="task-button-secondary"
-    @click="showCameraCapture = !showCameraCapture"
-  >
-    {{ showCameraCapture ? 'Fechar câmera' : 'Abrir preview ao vivo' }}
-  </button>
+      <!-- Alternativa com preview ao vivo -->
+      <button
+        type="button"
+        class="task-button-secondary"
+        @click="showCameraCapture = !showCameraCapture"
+      >
+        {{ showCameraCapture ? "Fechar câmera" : "Abrir preview ao vivo" }}
+      </button>
 
-  <CameraCapture
-    v-if="showCameraCapture"
-    @captured="handleCameraCapture"
-  />
-</div>
+      <CameraCapture v-if="showCameraCapture" @captured="handleCameraCapture" />
+    </div>
   </form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import tasksApi from '../api/tasksApi.js'
-import geocodingApi from '../api/geocodingApi.js'
-import { useGeolocation } from '../composables/useGeolocation.js'
-import { buildLocationPayload } from '../utils/location.js'
-
+import { ref, watch } from "vue";
+import tasksApi from "../api/tasksApi.js";
+import geocodingApi from "../api/geocodingApi.js";
+import { useGeolocation } from "../composables/useGeolocation.js";
+import { buildLocationPayload } from "../utils/location.js";
 
 const props = defineProps({
   editingTask: {
     type: Object,
     default: null,
   },
-})
+});
 
-const emit = defineEmits(['add', 'update', 'cancel'])
-const newTask = ref('')
-const previewUrl = ref(null)
-const imgAttachmentKey = ref(null)
-const uploading = ref(false)
-import CameraCapture from './CameraCapture.vue'
+const emit = defineEmits(["add", "update", "cancel"]);
+const newTask = ref("");
+const previewUrl = ref(null);
+const imgAttachmentKey = ref(null);
+const uploading = ref(false);
+import CameraCapture from "./CameraCapture.vue";
 const {
   location,
   loadingLocation,
@@ -104,24 +104,24 @@ const {
   setLocationFromTask,
   setLocationLabel,
   clearLocation,
-} = useGeolocation()
+} = useGeolocation();
 
-const showCameraCapture = ref(false)
+const showCameraCapture = ref(false);
 
 async function handleLocationRequest() {
-  const captured = await requestCurrentLocation()
-  if (!captured) return
+  const captured = await requestCurrentLocation();
+  if (!captured) return;
 
   try {
-    const address = await geocodingApi.reverse(
-      captured.latitude,
-      captured.longitude,
-    )
-    setLocationLabel(address?.label)
+    const address = await geocodingApi.reverse(captured.latitude, captured.longitude);
+    setLocationLabel(address?.label);
   } catch {
-    locationError.value =
-      'Localização obtida, mas não foi possível identificar a rua.'
+    locationError.value = "Localização obtida, mas não foi possível identificar a rua.";
   }
+}
+
+function handleRemoveLocation() {
+  clearLocation();
 }
 
 function handleCameraCapture(file) {
@@ -143,30 +143,30 @@ function handleCameraCapture(file) {
 watch(
   () => props.editingTask,
   (task) => {
-    newTask.value = task ? task.title : ''
-    if (task) setLocationFromTask(task)
-    else clearLocation()
+    newTask.value = task ? task.title : "";
+    if (task) setLocationFromTask(task);
+    else clearLocation();
     if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-    previewUrl.value = null
-    imgAttachmentKey.value = null
+    previewUrl.value = null;
+    imgAttachmentKey.value = null;
   },
-)
+);
 
 async function handleImageChange(event) {
-  const file = event.target.files[0]
-  if (!file) return
+  const file = event.target.files[0];
+  if (!file) return;
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-  previewUrl.value = URL.createObjectURL(file)
-  uploading.value = true
+  previewUrl.value = URL.createObjectURL(file);
+  uploading.value = true;
   try {
-    const response = await tasksApi.uploadImage(file)
-    imgAttachmentKey.value = response.data.attachment_key
+    const response = await tasksApi.uploadImage(file);
+    imgAttachmentKey.value = response.data.attachment_key;
   } catch (err) {
-    console.error('Erro ao fazer upload da imagem', err)
-    previewUrl.value = null
-    imgAttachmentKey.value = null
+    console.error("Erro ao fazer upload da imagem", err);
+    previewUrl.value = null;
+    imgAttachmentKey.value = null;
   } finally {
-    uploading.value = false
+    uploading.value = false;
   }
 }
 
@@ -180,27 +180,25 @@ function handleSubmit() {
   };
 
   if (props.editingTask) {
-    emit('update', props.editingTask.id, payload);
+    emit("update", props.editingTask.id, payload);
   } else {
-    emit('add', payload);
+    emit("add", payload);
   }
 
-  newTask.value = '';
+  newTask.value = "";
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
   imgAttachmentKey.value = null;
-  clearLocation()
+  clearLocation();
 }
 
-
-
 function handleCancel() {
-  newTask.value = ''
+  newTask.value = "";
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-  previewUrl.value = null
-  imgAttachmentKey.value = null
-  clearLocation()
-  emit('cancel')
+  previewUrl.value = null;
+  imgAttachmentKey.value = null;
+  clearLocation();
+  emit("cancel");
 }
 </script>
 
@@ -262,6 +260,11 @@ function handleCancel() {
 .task-button-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.task-button-remove-location {
+  color: #f39c12;
+  border-color: #f39c12;
 }
 
 .location-section {

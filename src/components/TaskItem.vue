@@ -1,48 +1,57 @@
 <template>
   <div class="task-item" :class="{ done: task.done }">
-    <img
-      v-if="task.img_url"
-      :src="task.img_url"
-      class="task-thumbnail"
-      alt="Imagem da tarefa"
-    />
+    <img v-if="task.img_url" :src="task.img_url" class="task-thumbnail" alt="Imagem da tarefa" />
     <label class="task-label">
       <input type="checkbox" :checked="task.done" @change="$emit('toggle', task.id)" />
       <span class="task-title">{{ task.title }}</span>
     </label>
-    <span v-if="task.latitude != null && task.longitude != null" class="location-indicator">
-      Localização salva
-    </span>
-    <TaskLocationMap
+    <button
       v-if="task.latitude != null && task.longitude != null"
+      type="button"
+      class="task-location-toggle"
+      @click="showLocation = !showLocation"
+    >
+      {{ showLocation ? '🗺️ Fechar mapa' : '📍 Ver localização' }}
+    </button>
+    <TaskLocationMap
+      v-if="task.latitude != null && task.longitude != null && showLocation"
       :location="taskLocation"
     />
     <div class="task-actions">
       <button class="task-edit" @click="$emit('edit', task)">Editar</button>
+      <button
+        v-if="task.latitude != null && task.longitude != null"
+        class="task-remove-location"
+        @click="$emit('remove-location', task.id)"
+      >
+        Remover localização
+      </button>
       <button class="task-remove" @click="$emit('remove', task.id)">Remover</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import TaskLocationMap from './TaskLocationMap.vue'
+import { computed, ref } from "vue";
+import TaskLocationMap from "./TaskLocationMap.vue";
 
 const props = defineProps({
   task: {
     type: Object,
     required: true,
   },
-})
+});
+
+const showLocation = ref(false);
 
 const taskLocation = computed(() => ({
   latitude: props.task.latitude,
   longitude: props.task.longitude,
   accuracy: props.task.geolocation_accuracy,
   label: props.task.location_label,
-}))
+}));
 
-defineEmits(['toggle', 'remove', 'edit'])
+defineEmits(["toggle", "remove", "edit", "remove-location"]);
 </script>
 
 <style scoped>
@@ -81,7 +90,7 @@ defineEmits(['toggle', 'remove', 'edit'])
   flex: 1;
 }
 
-.task-label input[type='checkbox'] {
+.task-label input[type="checkbox"] {
   width: 20px;
   height: 20px;
   accent-color: #4a90d9;
@@ -115,6 +124,20 @@ defineEmits(['toggle', 'remove', 'edit'])
   align-items: center;
 }
 
+.task-location-toggle {
+  background: none;
+  border: none;
+  color: #287a45;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  flex-basis: 100%;
+}
+
+.task-location-toggle:hover {
+  text-decoration: underline;
+}
+
 .location-indicator {
   color: #287a45;
   font-size: 0.75rem;
@@ -135,6 +158,19 @@ defineEmits(['toggle', 'remove', 'edit'])
 }
 
 .task-edit:hover {
+  text-decoration: underline;
+}
+
+.task-remove-location {
+  background: none;
+  border: none;
+  color: #f39c12;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.task-remove-location:hover {
   text-decoration: underline;
 }
 </style>
