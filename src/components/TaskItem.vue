@@ -11,7 +11,7 @@
       class="task-location-toggle"
       @click="showLocation = !showLocation"
     >
-      {{ showLocation ? '🗺️ Fechar mapa' : '📍 Ver localização' }}
+      {{ showLocation ? "🗺️ Fechar mapa" : "📍 Ver localização" }}
     </button>
     <TaskLocationMap
       v-if="task.latitude != null && task.longitude != null && showLocation"
